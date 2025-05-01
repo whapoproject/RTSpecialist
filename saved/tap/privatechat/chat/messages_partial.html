@@ -1,0 +1,10 @@
+{% for message in messages %}
+    <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+        <strong>{{ message.sender.username }}:</strong>
+        {% if message.content %}
+            {{ message.content }}
+        {% elif message.audio %}
+            <audio controls src="{{ message.audio.url }}"></audio>
+        {% endif %}
+    </div>
+{% endfor %}

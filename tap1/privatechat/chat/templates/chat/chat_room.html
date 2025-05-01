@@ -1,0 +1,110 @@
+<!-- templates/chat/chat_room.html -->
+{% extends 'chat/base.html' %}
+{% load static %}
+{% load chat_extras %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h3>Chats</h3>
+        <div class="user-list">
+            <!-- New Chat Button -->
+            <a href="?user=new-chat" class="user-link">
+                <div class="new-chat">
+                    <strong>New Chat</strong>
+                </div>
+            </a>
+
+            <!-- List users -->
+            {% for user in users %}
+            {% if user != request.user and user.profile and not user.is_superuser and not user.profile.deleted %}
+                <a href="?user={{ user.username }}&mark_read=true" class="user-link {% if user.username == selected_user.username %}active{% endif %}">
+                    <div class="user-info">
+                        <span class="username">{{ user.username }}</span>
+                    </div>
+        
+                    {% with count=user_unread_counts|get_item:user.username %}
+                        {% if count > 0 %}
+                            <div class="unread-count" style="font-size: 0.85em; color: red; margin-top: 4px;">
+                                {{ count }} new message{{ count|pluralize }}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+        
+                    {% with user_messages=messages|filter_messages_by_user:user %}
+                        {% if user_messages %}
+                            <div class="recent-message">
+                                {{ user_messages.last.content|truncatechars:30 }}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </aside>
+
+    <!-- Chat Area -->
+    <main class="chat-area">
+        <div class="chat-header">
+            <div class="logged-in-user">
+                <strong>You: </strong>{{ request.user.username }}
+            </div>
+            <div class="chatting-with">
+                <strong>Chatting with: </strong>{{ selected_user.username }}
+            </div>
+        </div>
+
+        <!-- ✅ Updated Chat Messages -->
+        <div id="message-list" class="messages">
+            {% for msg in messages %}
+                <div class="message {% if msg.sender == request.user %}sent{% else %}received{% endif %}">
+                    {% if msg.reply_to %}
+                        <div class="reply-block">
+                            <small><strong>Replying to:</strong> {{ msg.reply_to.content|truncatewords:10 }}</small>
+                        </div>
+                    {% endif %}
+
+                    <div class="content">
+                        {{ msg.content }}
+                        {% if msg.sender == request.user %}
+                            {% if msg.read %}
+                                <span class="ticks">✓✓</span>
+                            {% else %}
+                                <span class="ticks">✓</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- ✅ Clear Chat Button -->
+        <form method="POST" action="{% url 'chat:clear_chat' selected_user.username %}">
+            {% csrf_token %}
+            <button type="submit" class="clear-btn">Clear Chat</button>
+        </form>
+
+        <!-- Message Form -->
+        <form id="message-form" method="POST" enctype="multipart/form-data" onsubmit="return false;">
+            {% csrf_token %}
+            <input type="hidden" id="reply-to-id" name="reply_to" value="">
+            <input type="text" id="message-input" name="message" placeholder="Type your message..." autocomplete="off">
+            <button type="submit">Send</button>
+            <button type="button" id="record-button">🎤</button>
+        </form>
+    </main>
+</div>
+
+<script>
+    const receiverUsername = "{{ selected_user.username }}";
+    const fetchUrl = "{% url 'chat:fetch_messages' %}?user=" + receiverUsername;
+    const sendUrl = "{% url 'chat:chat_room' %}?user=" + receiverUsername;
+    const csrfToken = "{{ csrf_token }}";
+    const currentUsername = "{{ request.user.username }}";
+</script>
+
+<script src="{% static 'chat/chat.js' %}"></script>
+<script src="{% static 'chat/front.js' %}"></script>
+{% endblock %}

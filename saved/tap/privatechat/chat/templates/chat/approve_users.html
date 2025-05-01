@@ -1,0 +1,14 @@
+<h2>Approve New Users</h2>
+
+{% for profile in profiles %}
+    <div>
+        <strong>{{ profile.user.username }}</strong>
+        <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="profile_id" value="{{ profile.id }}">
+            <button type="submit">Approve</button>
+        </form>
+    </div>
+{% empty %}
+    <p>No users waiting for approval.</p>
+{% endfor %}

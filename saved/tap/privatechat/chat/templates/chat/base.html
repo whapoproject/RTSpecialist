@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- ✅ Mobile responsiveness -->
+    <title>Chat App</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'chat/style.css' %}">
+</head>
+<script>
+    function goBackToSidebar() {
+        document.querySelector('.chat-area').classList.remove('active');
+    }
+    document.querySelectorAll('.user-link').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                document.querySelector('.chat-area').classList.add('active');
+            }
+        });
+    });
+    </script>
+    
+<body>
+    {% block content %}{% endblock %}
+    
+    <script src="{% static 'chat/chat.js' %}"></script>
+</body>
+</html>
